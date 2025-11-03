@@ -1,7 +1,10 @@
 // index.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose');
+const Contact = require('./models/Contact');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -11,6 +14,42 @@ app.use(express.json());
 
 
 app.use('/', express.static(path.join(__dirname, '../frontend')));
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+
+const seedContacts = async () => {
+  const count = await Contact.countDocuments();
+  if (count === 0) {
+    await Contact.insertMany([
+      {
+        firstName: "Ana",
+        lastName: "Pérez",
+        email: "ana@example.com",
+        favoriteColor: "Blue",
+        birthday: "1998-04-12"
+      },
+      {
+        firstName: "Luis",
+        lastName: "Martínez",
+        email: "luis@example.com",
+        favoriteColor: "Green",
+        birthday: "1995-11-20"
+      },
+      {
+        firstName: "Sara",
+        lastName: "Lopez",
+        email: "sara@example.com",
+        favoriteColor: "Red",
+        birthday: "2000-02-10"
+      }
+    ]);
+    console.log("Sample contacts inserted!");
+  }
+};
+seedContacts();
 
 
 const professionalData = {
@@ -35,14 +74,36 @@ const professionalData = {
   }
 };
 
-// Endpoint
 app.get('/professional', (req, res) => {
   res.json(professionalData);
 });
 
+const contactsRouter = require('./routes/contacts'); 
 
-app.get('/health', (req, res) => res.send({status: 'ok'}));
+app.use('/contacts', contactsRouter);
+
+app.get('/health', (req, res) => res.send({ status: 'ok' }));
+
+app.get('/contacts', async (req, res) => {
+  try {
+    const contacts = await Contact.find();
+    res.json(contacts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.post('/contacts', async (req, res) => {
+  try {
+    const newContact = new Contact(req.body);
+    const saved = await newContact.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });
