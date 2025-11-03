@@ -6,6 +6,8 @@ const path = require('path');
 const mongoose = require('mongoose');
 const Contact = require('./models/Contact');
 
+const contactsRouter = require('./routes/contacts');
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -51,6 +53,7 @@ const seedContacts = async () => {
 };
 seedContacts();
 
+app.use('/contacts', contactsRouter);
 
 const professionalData = {
   professionalName: "Lilly Armenta",
@@ -74,36 +77,7 @@ const professionalData = {
   }
 };
 
-app.get('/professional', (req, res) => {
-  res.json(professionalData);
-});
-
-const contactsRouter = require('./routes/contacts'); 
-
-app.use('/contacts', contactsRouter);
-
+app.get('/professional', (req, res) => res.json(professionalData));
 app.get('/health', (req, res) => res.send({ status: 'ok' }));
 
-app.get('/contacts', async (req, res) => {
-  try {
-    const contacts = await Contact.find();
-    res.json(contacts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-app.post('/contacts', async (req, res) => {
-  try {
-    const newContact = new Contact(req.body);
-    const saved = await newContact.save();
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-
-app.listen(PORT, () => {
-  console.log(` Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
