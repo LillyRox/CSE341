@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
+const swaggerUi = require('swagger-ui-express');
+const swaggerFile = require('./swagger.json');
 const Contact = require('./models/Contact');
 
 const contactsRouter = require('./routes/contacts');
@@ -16,6 +18,7 @@ app.use(express.json());
 
 
 app.use('/', express.static(path.join(__dirname, '../frontend')));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
@@ -79,5 +82,4 @@ const professionalData = {
 
 app.get('/professional', (req, res) => res.json(professionalData));
 app.get('/health', (req, res) => res.send({ status: 'ok' }));
-
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
